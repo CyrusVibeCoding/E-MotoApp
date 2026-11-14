@@ -1,0 +1,2 @@
+# Design
+Operate mode. White #ffffff, secondary #f4f4f4, ink #171717, supporting text #606060, borders #dedede. System sans-serif for platform readability and text scaling. Map occupies available width; panels use 20px spacing, 14px rounding, 48px minimum actions. At larger widths forms and lists center at 760px. Strong tab selection, explicit GPS status, no decorative motion; native press feedback is immediate. Route and photography, when supplied, provide visual interest. No bundled visual effects or unlicensed fonts.

@@ -1,25 +1,45 @@
 {
   "expo": {
-    "name": "emoto",
-    "slug": "emoto",
+    "name": "E-Moto",
+    "slug": "cyrus",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.emoto.rides"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize",
+      "package": "com.emoto.rides"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow E-Moto to show your position and record rides while the app is open.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "locationAlwaysAndWhenInUsePermission": "Allow E-Moto to record rides and share with your joined group while the screen is locked."
+        }
+      ]
+    ],
+    "owner": "repride",
+    "extra": {
+      "eas": {
+        "projectId": "fe675c6f-c5c1-45c0-9dd7-abef2d300cd0"
+      }
     }
   }
 }
