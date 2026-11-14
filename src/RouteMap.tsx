@@ -4,7 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GroupSession, memberStatus } from './groupModel';
 import { Point, segments } from './ride';
-export default function RouteMap({ points, location, group, connected = false, serverNow = 0 }: { points: Point[]; location?: Point | null; group?: GroupSession | null; connected?: boolean; serverNow?: number }) {
+import type { FriendLocation } from './features/social';
+export default function RouteMap({ points, location, group, connected = false, serverNow = 0, friends = [], onFriendPress }: { points: Point[]; location?: Point | null; group?: GroupSession | null; connected?: boolean; serverNow?: number; friends?: FriendLocation[]; onFriendPress?: (id: string) => void }) {
   const map = useRef<MapView>(null);
   const fitted = useRef(false);
   const ready = useRef(false);
@@ -19,6 +20,7 @@ export default function RouteMap({ points, location, group, connected = false, s
     {segments(points).map((line, i) => line.length > 1 ? <Polyline key={i} coordinates={line} strokeColor="#171717" strokeWidth={5} /> : null)}
     {points[0] && <Marker coordinate={points[0]} title="Start" pinColor="#171717" />}
     {points.length > 1 && <Marker coordinate={points[points.length - 1]} title="Latest recorded point" pinColor="#606060" />}
+    {friends.map(friend => <Marker key={`friend-${friend.id}`} coordinate={friend} title={friend.display_name} description="Friend sharing location" onCalloutPress={() => onFriendPress?.(friend.id)} pinColor="#196382" />)}
     {group?.members.map(member => member.latitude !== null && member.longitude !== null ? <Marker key={member.id} coordinate={{ latitude: member.latitude, longitude: member.longitude }} title={`${member.name} - ${memberStatus(member, serverNow, connected)}`} description={member.observed_at ? `Updated ${new Date(member.observed_at).toLocaleTimeString()}` : 'Waiting for GPS'}>
       <View style={{ padding: 7, borderRadius: 12, backgroundColor: memberStatus(member, serverNow, connected) === 'Live' ? '#171717' : '#ededed', borderColor: '#606060', borderWidth: 1 }}><Text style={{ color: memberStatus(member, serverNow, connected) === 'Live' ? '#fff' : '#171717', fontWeight: '600' }}>{member.name}{memberStatus(member, serverNow, connected) === 'Live' ? ' - Live' : ' - Last known'}</Text></View>
     </Marker> : null)}

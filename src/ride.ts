@@ -1,5 +1,6 @@
 export type Point = { latitude: number; longitude: number; timestamp: number; accuracy: number; segment: number };
-export type Ride = { id: string; startedAt: number; endedAt?: number; lastFixAt?: number; points: Point[]; meters: number };
+export type Measurements = { movingSeconds: number; movingMeters: number; topSpeed: number };
+export type Ride = { measurements?: Measurements; id: string; startedAt: number; endedAt?: number; lastFixAt?: number; points: Point[]; meters: number };
 export type Bike = { make: string; model: string; nickname: string };
 export const MAX_AGE = 15000;
 export function metersBetween(a: Point, b: Point) {
@@ -22,7 +23,14 @@ export function appendPoint(ride: Ride, p: Point): Ride {
   if (same && distance / (gap / 1000) > 45) return ride;
   if (same && distance < Math.max(4, Math.max(last.accuracy, p.accuracy))) return { ...ride, lastFixAt: p.timestamp };
   const point = { ...p, segment: same ? last.segment : Math.max(last.segment + 1, p.segment) };
-  return { ...ride, points: [...ride.points, point], lastFixAt: p.timestamp, meters: ride.meters + (same ? distance : 0) };
+  const speed = same ? distance / (gap / 1000) : 0;
+  const moving = same && speed >= 1;
+  const measurements = ride.measurements ? {
+    movingSeconds: ride.measurements.movingSeconds + (moving ? gap / 1000 : 0),
+    movingMeters: ride.measurements.movingMeters + (moving ? distance : 0),
+    topSpeed: Math.max(ride.measurements.topSpeed, speed),
+  } : undefined;
+  return { ...ride, ...(measurements ? { measurements } : {}), points: [...ride.points, point], lastFixAt: p.timestamp, meters: ride.meters + (same ? distance : 0) };
 }
 export function duration(seconds: number) {
   const s = Math.max(0, Math.floor(seconds));

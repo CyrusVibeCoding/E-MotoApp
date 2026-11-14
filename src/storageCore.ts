@@ -4,7 +4,7 @@ export const emptyData: Data = { version: 1, rides: [], draft: null, bike: { mak
 type Adapter = { getItem(key: string): Promise<string | null>; setItem(key: string, value: string): Promise<void> };
 const KEY = '@emoto/v1';
 function validRide(value: any): value is Ride {
-  return value && typeof value.id === 'string' && Number.isFinite(value.startedAt) && Number.isFinite(value.meters) && value.meters >= 0 && (value.endedAt === undefined || Number.isFinite(value.endedAt) && value.endedAt >= value.startedAt) && Array.isArray(value.points) && value.points.every((p: any) => Number.isFinite(p.latitude) && Math.abs(p.latitude) <= 90 && Number.isFinite(p.longitude) && Math.abs(p.longitude) <= 180 && Number.isFinite(p.timestamp) && Number.isFinite(p.accuracy) && Number.isInteger(p.segment));
+  return value && (value.measurements === undefined || value.measurements && ['movingSeconds', 'movingMeters', 'topSpeed'].every(key => Number.isFinite(value.measurements[key]) && value.measurements[key] >= 0) && value.measurements.topSpeed <= 45) && typeof value.id === 'string' && Number.isFinite(value.startedAt) && Number.isFinite(value.meters) && value.meters >= 0 && (value.endedAt === undefined || Number.isFinite(value.endedAt) && value.endedAt >= value.startedAt) && Array.isArray(value.points) && value.points.every((p: any) => Number.isFinite(p.latitude) && Math.abs(p.latitude) <= 90 && Number.isFinite(p.longitude) && Math.abs(p.longitude) <= 180 && Number.isFinite(p.timestamp) && Number.isFinite(p.accuracy) && Number.isInteger(p.segment));
 }
 export function createStorage(adapter: Adapter) {
   let queue = Promise.resolve();

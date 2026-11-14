@@ -17,5 +17,5 @@ export function recordBatch(data: Data, points: Point[], now: number): Data {
   }
   return { ...data, draft };
 }
-export const needsTracking = (recording: boolean, sharing: boolean) =>
-  recording || sharing;
+export const needsTracking = (recording: boolean, sharing: boolean, friends = false) =>
+  recording || sharing || friends;

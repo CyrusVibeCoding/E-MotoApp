@@ -10,7 +10,9 @@
     "expo-constants": "~58.0.16",
     "expo-dev-client": "~58.0.20",
     "expo-font": "~58.0.12",
+    "expo-linking": "~58.0.17",
     "expo-location": "~58.0.22",
+    "expo-router": "~58.0.31",
     "expo-status-bar": "~58.0.5",
     "expo-task-manager": "~58.0.14",
     "react": "19.3.0",
@@ -18,6 +20,7 @@
     "react-native": "0.88.1",
     "react-native-maps": "1.29.11",
     "react-native-safe-area-context": "~5.11.1",
+    "react-native-screens": "~4.30.1",
     "react-native-url-polyfill": "^4.0.0",
     "react-native-web": "^0.21.4"
   },
@@ -35,7 +38,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test ride.test.mjs storage.test.mjs group.test.mjs tracking.test.mjs",
+    "test": "node --experimental-strip-types --test ride.test.mjs storage.test.mjs group.test.mjs tracking.test.mjs social.test.mjs",
     "lint": "expo lint"
   },
   "private": true

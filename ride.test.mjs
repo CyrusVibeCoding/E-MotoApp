@@ -33,8 +33,9 @@ test('noise within reported uncertainty is filtered', () => {
   assert.equal(r.meters, 0);
 });
 test('source text is valid UTF-8 without replacement characters', async () => {
-  const { readFile } = await import('node:fs/promises');
-  for (const name of ['App.tsx', 'src/useRecorder.ts']) {
+  const { readFile, readdir } = await import('node:fs/promises');
+  const sources = (await readdir(new URL('./src/', import.meta.url), { recursive: true })).filter(name => /\.tsx?$/.test(name)).map(name => 'src/' + name);
+  for (const name of sources) {
     const text = new TextDecoder('utf-8', { fatal: true }).decode(await readFile(new URL(name, import.meta.url)));
     assert.ok(!text.includes('\uFFFD'));
   }
