@@ -20,7 +20,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 
     await page.reload();
     await page.getByRole('tab', { name: 'Garage', exact: true }).click();
     await expect(page.getByRole('textbox', { name: 'Bike nickname' })).toHaveValue('Trail bike');
-    await page.getByRole('tab', { name: 'Rides', exact: true }).click();
+    await page.getByRole('tab', { name: 'Profile', exact: true }).click();
     await expect(page.getByText('Your first route is waiting.')).toBeVisible();
     expect(errors).toEqual([]);
   });

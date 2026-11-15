@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useEffectEvent } from "react";
 import { AppState } from "react-native";
 import { emptyData } from "./storage";
 import { Bike, validFix } from "./ride";
 import {
   finishRecording,
+  setFriendSharing,
+  deleteSavedRide,
   locateOnce,
   refreshTracking,
   requestTrackingPermission,
@@ -20,10 +22,14 @@ export function useRecorder() {
     [now, setNow] = useState(Date.now);
   const [background, setBackground] = useState(false);
   const lock = useRef(false);
+  const [friendsUntil, setFriendsUntil] = useState(0);
+  const [friendMessage, setFriendMessage] = useState("");
   async function refresh() {
     try {
       const value = await refreshTracking();
       setData(value.data);
+      setFriendsUntil(value.tracking.friendsUntil);
+      setFriendMessage(value.tracking.friendMessage);
       setFix(value.tracking.fix);
       setBackground(value.tracking.background);
       setStatus(
@@ -46,18 +52,20 @@ export function useRecorder() {
       setStatus(String(e));
     }
   }
+  const refreshEvent = useEffectEvent(refresh);
+  const locateEvent = useEffectEvent(locate);
   useEffect(() => {
     let live = true;
     const timer = setInterval(() => {
       if (live) {
         setNow(Date.now());
-        void refresh();
+        void refreshEvent();
       }
     }, 1000);
     const listener = AppState.addEventListener("change", () => {
-      void refresh();
+      void refreshEvent();
     });
-    const startup = setTimeout(() => void locate(), 0);
+    const startup = setTimeout(() => void locateEvent(), 0);
     return () => {
       live = false;
       clearTimeout(startup);
@@ -91,6 +99,13 @@ export function useRecorder() {
     fix,
     now,
     background,
+    friendsUntil,
+    friendMessage,
+    shareWithFriends: (enabled: boolean) => command(async () => {
+      if (enabled) await requestTrackingPermission();
+      await setFriendSharing(enabled);
+    }),
+    deleteRide: (id: string) => command(() => deleteSavedRide(id)),
     recovered: false,
     permissionBlocked: status.includes("denied"),
     locate,

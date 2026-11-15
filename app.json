@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "E-Moto",
+    "name": "RepRide",
     "slug": "cyrus",
     "version": "1.0.0",
     "orientation": "default",
@@ -27,11 +27,11 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow E-Moto to show your position and record rides while the app is open.",
+          "locationWhenInUsePermission": "Allow RepRide to show your position and record rides while the app is open.",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true,
-          "locationAlwaysAndWhenInUsePermission": "Allow E-Moto to record rides and share with your joined group while the screen is locked."
+          "locationAlwaysAndWhenInUsePermission": "Allow RepRide to record rides and share with your joined group while the screen is locked."
         }
       ]
     ],

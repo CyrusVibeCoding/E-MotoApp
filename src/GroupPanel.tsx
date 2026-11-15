@@ -13,7 +13,7 @@ export default function GroupPanel({ ride }: Props) {
     return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [s.action, disabled && { opacity: 0.45 }, pressed && { opacity: 0.7 }]}><Text style={s.actionText}>{title}</Text></Pressable>;
   }
   return <View style={s.root}>
-    <Pressable accessibilityRole="button" accessibilityState={{ expanded }} onPress={() => setExpanded(!expanded)} style={s.heading}>
+    <Pressable accessibilityRole="button" aria-expanded={expanded} accessibilityState={{ expanded }} onPress={() => setExpanded(!expanded)} style={s.heading}>
       <Ionicons name="people-outline" size={22} color="#171717" /><Text style={s.title}>{ride.group ? `Group ${ride.group.code}` : 'Ride together'}</Text><Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} />
     </Pressable>
     {ride.group && <Text accessibilityLiveRegion="polite" style={s.body}>{ride.sharing ? 'Sharing with this group only' : 'Location sharing interrupted. Positions are last known.'}</Text>}
@@ -26,7 +26,7 @@ export default function GroupPanel({ ride }: Props) {
     </> : expanded && <>
       {!ride.configured ? <Text style={s.body}>Group rides need a Supabase project connection. Follow GROUP-RIDES.md to enable them. Your local ride recorder still works.</Text> : <>
         <Text style={s.label}>Display name</Text><TextInput accessibilityLabel="Group display name" maxLength={32} value={name} onChangeText={setName} placeholder="Your riding name" placeholderTextColor="#606060" style={s.input} />
-        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: consent }} onPress={() => setConsent(!consent)} style={s.consent}><Ionicons name={consent ? 'checkbox' : 'square-outline'} size={24} /><Text style={[s.body, { flex: 1 }]}>Share my location with members of this group including while the screen is locked, when background permission is granted. Leaving stops uploads. Last-known positions can remain for up to 90 seconds offline.</Text></Pressable>
+        <Pressable accessibilityRole="checkbox" aria-checked={consent} accessibilityState={{ checked: consent }} onPress={() => setConsent(!consent)} style={s.consent}><Ionicons name={consent ? 'checkbox' : 'square-outline'} size={24} /><Text style={[s.body, { flex: 1 }]}>Share my location with members of this group including while the screen is locked, when background permission is granted. Leaving stops uploads. Last-known positions can remain for up to 90 seconds offline.</Text></Pressable>
         {action(ride.busy ? 'Connecting...' : 'Create group', () => void ride.enter('create', name), ride.busy || !consent)}
         <Text style={s.label}>Invite code</Text><TextInput accessibilityLabel="Group invite code" maxLength={8} value={code} onChangeText={setCode} autoCapitalize="characters" autoCorrect={false} placeholder="8-character code" placeholderTextColor="#606060" style={s.input} />
         {action(ride.busy ? 'Connecting...' : 'Join group', () => void ride.enter('join', name, code), ride.busy || !consent)}

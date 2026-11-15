@@ -1,3 +1,6 @@
+import { readLocalData } from './features/localData';
+import { insidePrivacyZone } from './features/privacy';
+import { socialRequest } from './features/social';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as TaskManager from "expo-task-manager";
 import * as Location from "expo-location";
@@ -13,6 +16,9 @@ const TASK = "emoto-location-v1";
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 const KEY = "@emoto/tracking-v1";
 type State = {
+  friendsUntil: number;
+  friendPendingStop: boolean;
+  friendMessage: string;
   group: GroupSession | null;
   pendingLeave: string | null;
   fix: Point | null;
@@ -22,6 +28,9 @@ type State = {
   background: boolean;
 };
 const initial: State = {
+  friendsUntil: 0,
+  friendPendingStop: false,
+  friendMessage: "",
   group: null,
   pendingLeave: null,
   fix: null,
@@ -99,8 +108,9 @@ export function ingest(locations: Location.LocationObject[]) {
     await writeData(recordBatch(data, points, now));
     await save(s); // Local ride checkpoints precede networking.
     await sync(s);
+    scheduleFriendSync();
     await reconcile(s);
-  });
+  }).then(() => scheduleFriendSync());
 }
 if (Platform.OS !== "web" && !TaskManager.isTaskDefined(TASK)) {
   TaskManager.defineTask<{ locations: Location.LocationObject[] }>(
@@ -120,7 +130,7 @@ if (Platform.OS !== "web" && !TaskManager.isTaskDefined(TASK)) {
 }
 async function reconcile(s: State) {
   const data = await readData();
-  const needed = needsTracking(!!data.draft, !!s.group);
+  const needed = needsTracking(!!data.draft, !!s.group, s.friendsUntil > Date.now());
   const available =
     Platform.OS !== "web" && !isExpoGo && (await TaskManager.isAvailableAsync());
   const granted =
@@ -136,9 +146,9 @@ async function reconcile(s: State) {
         pausesUpdatesAutomatically: false,
         showsBackgroundLocationIndicator: true,
         foregroundService: {
-          notificationTitle: "E-Moto location active",
+          notificationTitle: "RepRide location active",
           notificationBody:
-            "Recording or group sharing is enabled. Open E-Moto to stop.",
+            "Recording or group sharing is enabled. Open RepRide to stop.",
           killServiceOnDestroy: true,
         },
       });
@@ -169,6 +179,7 @@ export function refreshTracking(network = false) {
   return exclusive(async () => {
     const s = await state();
     if (network) await sync(s);
+    scheduleFriendSync();
     await reconcile(s);
     return { data: await readData(), tracking: s };
   });
@@ -206,6 +217,7 @@ export const startRecording = () =>
         startedAt,
         points: [{ ...s.fix, timestamp: startedAt }],
         meters: 0,
+        measurements: { movingSeconds: 0, movingMeters: 0, topSpeed: 0 },
       },
     });
     await reconcile(s);
@@ -261,3 +273,66 @@ export const leaveGroup = () =>
     await reconcile(s);
     await sync(s);
   });
+
+let nextFriendAttempt = 0;
+let friendRequest: Promise<void> | null = null;
+let friendResync = false;
+function scheduleFriendSync(force = false): Promise<void> {
+  if (friendRequest) {
+    if (force) friendResync = true;
+    return friendRequest;
+  }
+  if (!force && Date.now() < nextFriendAttempt) return Promise.resolve();
+  friendRequest = syncFriends().catch(() => {}).finally(() => {
+    friendRequest = null;
+    if (friendResync) { friendResync = false; void scheduleFriendSync(true); }
+  });
+  return friendRequest;
+}
+async function syncFriends() {
+  // Snapshot and status writes use the recorder queue. The network request has
+  // its own coalesced lifecycle, so an offline request cannot block GPS or Finish.
+  const snapshot = await exclusive(state);
+  if (!snapshot.friendPendingStop && snapshot.friendsUntil <= Date.now()) return;
+  let message = '';
+  let stopped = false;
+  let failed = false;
+  try {
+    const local = await readLocalData();
+    const active = snapshot.friendsUntil > Date.now();
+    const fix = snapshot.fix;
+    const canShare = active && fix && validFix(fix, Date.now()) && !insidePrivacyZone(fix, local.zones);
+    if (canShare) {
+      await socialRequest('presence', { privacy_revision: local.privacyRevision, latitude: fix.latitude, longitude: fix.longitude, timestamp: fix.timestamp, until: snapshot.friendsUntil });
+      message = 'Location shared with accepted friends.';
+    } else {
+      await socialRequest('presence', { stop: true });
+      message = active ? 'Friend location hidden while GPS is unavailable or inside a privacy zone.' : '';
+      stopped = !active;
+    }
+  } catch {
+    failed = true;
+    message = 'Friend sharing interrupted. Last shared locations expire within 30 seconds.';
+  }
+  nextFriendAttempt = Date.now() + (failed ? 15000 : 5000);
+  await exclusive(async () => {
+    const current = await state();
+    if (current.friendsUntil !== snapshot.friendsUntil) { friendResync = true; return; }
+    current.friendMessage = message;
+    if (stopped) { current.friendPendingStop = false; current.friendsUntil = 0; }
+    await save(current);
+  });
+}
+export const setFriendSharing = (enabled: boolean) => exclusive(async () => {
+  const s = await state();
+  s.friendsUntil = enabled ? Date.now() + 15 * 60 * 1000 : 0;
+  s.friendPendingStop = true;
+  nextFriendAttempt = 0;
+  await save(s);
+  await reconcile(s);
+  void scheduleFriendSync(true);
+});
+export const deleteSavedRide = (id: string) => exclusive(async () => {
+  const data = await readData();
+  await writeData({ ...data, rides: data.rides.filter(ride => ride.id !== id) });
+});

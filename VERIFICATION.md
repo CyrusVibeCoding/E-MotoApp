@@ -1,3 +1,21 @@
+# Four-tab major update verification, 2026-11-14
+
+This section supersedes historical implementation-status claims below.
+
+- Baseline master was 364cf6fc6f6c109aabb9faa4b43bbbdb4349d160. Remote preview/four-tab was 80ca75c471adf4411dc4859fb741931b70c94e79. Only the latter contained Today/Friends/Garage/Ranks.
+- Implemented Home/Friends/Garage/Profile through Expo Router with app-lifetime recorder/group providers and tracking imported before router registration. Original @emoto/v1 data and @emoto/tracking-v1 state remain readable.
+- TypeScript and lint pass. All 42 Node/PGlite tests pass. All five Playwright checks pass, including legacy draft/history/build persistence, navigation and Finish, plus Finish/Stop while friend uploads are stalled.
+- iOS, Android, and web exports pass. Live Metro browser navigation on port 8081 passes all four screens at 390x844 and Home at 1280x900, with zero page errors. Public tunnel health, iOS manifest identity, and served full iOS bundle feature strings are verified.
+- Hosted E-Moto Supabase now has additive repride_social_foundation and repride_serialize_privacy_updates migrations. Hosted checks cover private default, follow versus accepted friendship, feeds, publication stats, presence/stop, hide, blocking, malformed builds, and concurrent privacy/publish operations. Temporary QA auth users and their data were removed.
+- Privacy mutations and publication/presence checks serialize on the same profile-row lock. Client route filtering preserves segment gaps and excludes endpoint distances, endpoint areas, and zones. New privacy zones clear previously shared routes and revoke presence before local activation. Old-revision uploads fail. Friend networking runs outside the recorder command queue, coalesces requests, and backs off after completion.
+- New recordings optionally capture GPS-estimated moving seconds, moving distance, and top speed. Moving segments require at least 1 m/s and an accepted same-segment fix. Older rides retain unavailable measurements. Shared payloads contain date, permitted stats, and coordinate-only sanitized segments.
+
+Preview choices made for this increment are 15-minute explicit friend sharing with a 30-second server lease, first-ride/10-mile achievements, the existing device-scoped anonymous identity, and the existing native map provider. Reference bike photography is labeled.
+
+Physical iPhone/Android GPS, background delivery, locked-screen reliability, two-phone group/friend behavior, keyboard/safe-area behavior, and native map rendering remain unverified. Automatic ride detection, wheelie sensing, photo/video posting, recoverable accounts, actual leaderboards, and licensed Specd 3D remain pending. Expo Go preview supports foreground testing.
+
+## Historical milestone record
+
 # Ride milestone verification
 
 One code review/fix pass completed. Existing monochrome styling retained using the existing Impeccable guidance; no decorative reference assets selected.
